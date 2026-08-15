@@ -527,6 +527,16 @@ const cartTotal = cart.reduce(
   (total, item) => total + item.price * item.quantity,
   0
 );
+const cartMessage = `Hi Midnight Cravings, I'd like to place this order:
+
+${cart
+  .map(
+    (item) =>
+      `${item.name} - ${item.size} - ₹${item.price} x ${item.quantity}`
+  )
+  .join("\n")}
+
+Total: ₹${cartTotal}`;
   const [cartOpen, setCartOpen] = useState(false);
   type CartItem = {
   name: string;
@@ -722,6 +732,23 @@ const cartTotal = cart.reduce(
     </span>
   </div>
 </div>
+<a
+  href={cart.length > 0 ? whatsappLink(cartMessage) : "#"}
+  target="_blank"
+  rel="noopener noreferrer"
+  className={`mt-5 block w-full rounded-full px-5 py-3 text-center font-bold transition ${
+    cart.length > 0
+      ? "bg-orange-500 text-black hover:bg-orange-400"
+      : "cursor-not-allowed bg-white/10 text-gray-500"
+  }`}
+  onClick={(event) => {
+    if (cart.length === 0) {
+      event.preventDefault();
+    }
+  }}
+>
+  Order on WhatsApp
+</a>
 </div>
   </div>
 )}
