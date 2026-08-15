@@ -638,7 +638,7 @@ Total: ₹${cartTotal}`;
         )}
       </header>
       {cartOpen && (
-  <div className="fixed right-5 top-24 z-[60] w-80 rounded-2xl border border-white/10 bg-[#151515] p-5 shadow-2xl">
+  <div className="fixed right-2 top-20 z-[60] w-[calc(100%-1rem)] max-w-sm rounded-2xl border border-white/10 bg-[#151515] p-5 shadow-2xl sm:right-5 sm:top-24 sm:w-80">
     <div className="flex items-center justify-between">
       <h2 className="text-xl font-black">Your Cart</h2>
 
@@ -650,7 +650,26 @@ Total: ₹${cartTotal}`;
       </button>
     </div>
 
-    <div className="mt-5 space-y-3">
+   {cart.length === 0 && (
+  <div className="mt-8 rounded-xl border border-white/10 bg-white/[0.04] p-6 text-center">
+    <div className="text-5xl">🛒</div>
+
+    <h3 className="mt-4 text-lg font-bold">
+      Your cart is empty
+    </h3>
+
+    <p className="mt-2 text-sm text-gray-400">
+      Add something delicious to get started.
+    </p>
+
+    <button
+      onClick={() => setCartOpen(false)}
+      className="mt-5 rounded-full bg-orange-500 px-5 py-3 font-bold text-black hover:bg-orange-400"
+    >
+      Browse Menu
+    </button>
+  </div>
+)} <div className="mt-5 space-y-3">
   {cart.map((item, index) => (
     <div
       key={index}
