@@ -79,9 +79,11 @@ export default function Home() {
         <h2 className="mt-3 text-4xl font-black">PIZZAS</h2>
 
         <div className="mt-10 max-w-sm rounded-2xl border border-white/10 bg-white/5 p-6">
-          <div className="mb-5 flex h-48 items-center justify-center rounded-xl bg-white/10 text-6xl">
-            🍕
-          </div>
+          <img
+  src="/margherita.jpg"
+  alt="Margherita Pizza"
+  className="mb-5 h-48 w-full rounded-xl object-cover"
+/>
 
           <h3 className="text-2xl font-bold">Margherita</h3>
 
