@@ -644,12 +644,21 @@ Total: ₹${cartTotal}`;
             </a>
           </div>
 
-          <button
-            onClick={() => setMenuOpen(!menuOpen)}
-            className="rounded-lg border border-white/10 px-3 py-2 sm:hidden"
-          >
-            ☰
-          </button>
+          <div className="flex items-center gap-2 sm:hidden">
+  <button
+    onClick={() => setCartOpen(true)}
+    className="rounded-full border border-white/15 px-4 py-2.5 text-sm font-bold hover:bg-white/10"
+  >
+    🛒 Cart ({cartCount})
+  </button>
+
+  <button
+    onClick={() => setMenuOpen(!menuOpen)}
+    className="rounded-lg border border-white/10 px-3 py-2"
+  >
+    ☰
+  </button>
+</div>
         </div>
 
         {menuOpen && (
