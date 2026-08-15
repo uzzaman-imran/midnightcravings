@@ -520,6 +520,7 @@ export default function Home() {
 
   const [cartCount, setCartCount] = useState(0);
   const [cart, setCart] = useState<CartItem[]>([]);
+  const [cartOpen, setCartOpen] = useState(false);
   type CartItem = {
   name: string;
   size: PizzaSize;
@@ -570,7 +571,7 @@ export default function Home() {
             </a>
 
             <button
-  onClick={() => alert(`You have ${cart.length} item(s) in your cart.`)}
+  onClick={() => setCartOpen(true)}
   className="rounded-full border border-white/15 px-5 py-2.5 text-sm font-bold hover:bg-white/10"
 >
   🛒 Cart ({cartCount})
@@ -619,6 +620,93 @@ export default function Home() {
           </div>
         )}
       </header>
+      {cartOpen && (
+  <div className="fixed right-5 top-24 z-[60] w-80 rounded-2xl border border-white/10 bg-[#151515] p-5 shadow-2xl">
+    <div className="flex items-center justify-between">
+      <h2 className="text-xl font-black">Your Cart</h2>
+
+      <button
+        onClick={() => setCartOpen(false)}
+        className="rounded-lg px-3 py-1 text-gray-400 hover:bg-white/10 hover:text-white"
+      >
+        ✕
+      </button>
+    </div>
+
+    <div className="mt-5 space-y-3">
+  {cart.map((item, index) => (
+    <div
+      key={index}
+      className="rounded-xl border border-white/10 bg-white/[0.04] p-4"
+    >
+      <div className="flex items-start justify-between gap-3">
+        <div>
+          <h3 className="font-bold">{item.name}</h3>
+
+          <p className="mt-1 text-sm text-gray-400">
+            {item.size}
+          </p>
+        </div>
+
+        <span className="font-bold text-orange-500">
+          ₹{item.price}
+        </span>
+      </div>
+
+      <div className="mt-3 flex items-center justify-between">
+  <span className="text-sm text-gray-400">
+    Quantity
+  </span>
+
+  <div className="flex items-center gap-2">
+    <button
+  onClick={() => {
+    setCart((current) =>
+      current
+        .map((cartItem, cartIndex) =>
+          cartIndex === index
+            ? {
+                ...cartItem,
+                quantity: cartItem.quantity - 1,
+              }
+            : cartItem
+        )
+        .filter((cartItem) => cartItem.quantity > 0)
+    );
+  }}
+  className="flex h-8 w-8 items-center justify-center rounded-lg border border-white/10 hover:bg-white/10"
+>
+  −
+</button>
+
+    <span className="w-6 text-center font-bold">
+      {item.quantity}
+    </span>
+
+    <button
+  onClick={() => {
+    setCart((current) =>
+      current.map((cartItem, cartIndex) =>
+        cartIndex === index
+          ? {
+              ...cartItem,
+              quantity: cartItem.quantity + 1,
+            }
+          : cartItem
+      )
+    );
+  }}
+  className="flex h-8 w-8 items-center justify-center rounded-lg border border-white/10 hover:bg-white/10"
+>
+  +
+</button>
+  </div>
+</div>
+    </div>
+  ))}
+</div>
+  </div>
+)}
 
       {/* Independence Day Offer */}
       <section className="border-b border-orange-500/20 bg-gradient-to-r from-orange-500/10 via-white/[0.03] to-green-500/10">
