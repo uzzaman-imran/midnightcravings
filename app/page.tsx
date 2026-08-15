@@ -441,14 +441,14 @@ function PizzaCard({
   pizza,
   selectedSize,
   onSizeChange,
+  onAddToCart,
 }: {
   pizza: Pizza;
   selectedSize: PizzaSize;
   onSizeChange: (size: PizzaSize) => void;
+  onAddToCart: () => void;
 }) {
   const price = pizza.prices[selectedSize];
-
-  const message = `Hi Midnight Cravings, I'd like to order a ${pizza.name} pizza - ${selectedSize} - ₹${price}.`;
 
   return (
     <div className="rounded-2xl border border-white/10 bg-white/[0.04] p-5 transition hover:border-orange-500/40 hover:bg-white/[0.07]">
@@ -503,14 +503,12 @@ function PizzaCard({
         </span>
       </p>
 
-      <a
-        href={whatsappLink(message)}
-        target="_blank"
-        rel="noopener noreferrer"
-        className="mt-5 block rounded-full bg-orange-500 px-5 py-3 text-center font-bold text-black transition hover:bg-orange-400"
+      <button
+        onClick={onAddToCart}
+        className="mt-5 block w-full rounded-full bg-orange-500 px-5 py-3 text-center font-bold text-black transition hover:bg-orange-400"
       >
-        Order Now
-      </a>
+        Add to Cart
+      </button>
     </div>
   );
 }
@@ -519,6 +517,15 @@ export default function Home() {
   const [pizzaSelections, setPizzaSelections] = useState<
     Record<string, PizzaSize>
   >({});
+
+  const [cartCount, setCartCount] = useState(0);
+  const [cart, setCart] = useState<CartItem[]>([]);
+  type CartItem = {
+  name: string;
+  size: PizzaSize;
+  price: number;
+  quantity: number;
+};
 
   const [menuOpen, setMenuOpen] = useState(false);
 
@@ -562,6 +569,13 @@ export default function Home() {
               View Menu
             </a>
 
+            <button
+  onClick={() => alert(`You have ${cart.length} item(s) in your cart.`)}
+  className="rounded-full border border-white/15 px-5 py-2.5 text-sm font-bold hover:bg-white/10"
+>
+  🛒 Cart ({cartCount})
+</button>
+
             <a
               href={`tel:${PHONE}`}
               className="rounded-full bg-orange-500 px-5 py-2.5 text-sm font-bold text-black hover:bg-orange-400"
@@ -588,6 +602,12 @@ export default function Home() {
               >
                 View Menu
               </a>
+
+              <button
+                className="rounded-full border border-white/15 px-5 py-3 font-bold hover:bg-white/10"
+              >
+                🛒 Cart ({cartCount})
+              </button>
 
               <a
                 href={`tel:${PHONE}`}
@@ -692,6 +712,22 @@ export default function Home() {
                 onSizeChange={(size) =>
                   setPizzaSize(pizza.name, size)
                 }
+                onAddToCart={() => {
+  const size = getPizzaSize(pizza.name);
+  const price = pizza.prices[size];
+
+  setCart((current) => [
+    ...current,
+    {
+      name: pizza.name,
+      size,
+      price,
+      quantity: 1,
+    },
+  ]);
+
+  setCartCount((count) => count + 1);
+}}
               />
             ))}
           </div>
