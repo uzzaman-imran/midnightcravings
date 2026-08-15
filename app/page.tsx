@@ -4,9 +4,18 @@ import { useState } from "react";
 
 export default function Home() {
   const [pizzaSize, setPizzaSize] = useState("Regular");
+  const [farmHouseSize, setFarmHouseSize] = useState("Regular");
 
   const pizzaPrice =
     pizzaSize === "Regular" ? 179 : pizzaSize === "Medium" ? 249 : 349;
+
+  const farmHousePrice =
+    farmHouseSize === "Regular"
+      ? 179
+      : farmHouseSize === "Medium"
+        ? 249
+        : 349;
+
   return (
     <main className="min-h-screen bg-[#0b0b0b] text-white">
       {/* Header */}
@@ -70,7 +79,7 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Test Menu Item */}
+      {/* Menu */}
       <section id="menu" className="mx-auto max-w-6xl px-6 py-20">
         <p className="text-sm font-bold uppercase tracking-[0.35em] text-orange-500">
           Our Menu
@@ -78,12 +87,13 @@ export default function Home() {
 
         <h2 className="mt-3 text-4xl font-black">PIZZAS</h2>
 
+        {/* Margherita */}
         <div className="mt-10 max-w-sm rounded-2xl border border-white/10 bg-white/5 p-6">
           <img
-  src="/margherita.jpg"
-  alt="Margherita Pizza"
-  className="mb-5 h-48 w-full rounded-xl object-cover"
-/>
+            src="/margherita.jpg"
+            alt="Margherita Pizza"
+            className="mb-5 h-48 w-full rounded-xl object-cover"
+          />
 
           <h3 className="text-2xl font-bold">Margherita</h3>
 
@@ -92,43 +102,98 @@ export default function Home() {
           </p>
 
           <div className="mt-5 space-y-2">
-  <button
-    onClick={() => setPizzaSize("Regular")}
-    className="flex w-full justify-between rounded-lg border border-white/10 px-4 py-3 text-left hover:bg-white/10"
-  >
-    <span>Regular</span>
-    <span className="font-bold">₹179</span>
-  </button>
+            <button
+              onClick={() => setPizzaSize("Regular")}
+              className="flex w-full justify-between rounded-lg border border-white/10 px-4 py-3 text-left hover:bg-white/10"
+            >
+              <span>Regular</span>
+              <span className="font-bold">₹179</span>
+            </button>
 
-  <button
-    onClick={() => setPizzaSize("Medium")}
-    className="flex w-full justify-between rounded-lg border border-white/10 px-4 py-3 text-left hover:bg-white/10"
-  >
-    <span>Medium</span>
-    <span className="font-bold">₹249</span>
-  </button>
+            <button
+              onClick={() => setPizzaSize("Medium")}
+              className="flex w-full justify-between rounded-lg border border-white/10 px-4 py-3 text-left hover:bg-white/10"
+            >
+              <span>Medium</span>
+              <span className="font-bold">₹249</span>
+            </button>
 
-  <button
-    onClick={() => setPizzaSize("Large")}
-    className="flex w-full justify-between rounded-lg border border-white/10 px-4 py-3 text-left hover:bg-white/10"
-  >
-    <span>Large</span>
-    <span className="font-bold">₹349</span>
-  </button>
-</div>
+            <button
+              onClick={() => setPizzaSize("Large")}
+              className="flex w-full justify-between rounded-lg border border-white/10 px-4 py-3 text-left hover:bg-white/10"
+            >
+              <span>Large</span>
+              <span className="font-bold">₹349</span>
+            </button>
+          </div>
 
-<p className="mt-4 text-sm text-gray-400">
-  Selected: <span className="text-white">{pizzaSize}</span>
-</p>
+          <p className="mt-4 text-sm text-gray-400">
+            Selected: <span className="text-white">{pizzaSize}</span>
+          </p>
 
           <a
-  href={`https://wa.me/919966955540?text=${encodeURIComponent(
-    `Hi Midnight Cravings, I'd like to order a Margherita pizza - ${pizzaSize} - ₹${pizzaPrice}.`
-  )}`}
-  className="mt-6 block rounded-full bg-orange-500 px-5 py-3 text-center font-bold text-black hover:bg-orange-400"
->
-  Order Now
-</a>
+            href={`https://wa.me/919966955540?text=${encodeURIComponent(
+              `Hi Midnight Cravings, I'd like to order a Margherita pizza - ${pizzaSize} - ₹${pizzaPrice}.`
+            )}`}
+            className="mt-6 block rounded-full bg-orange-500 px-5 py-3 text-center font-bold text-black hover:bg-orange-400"
+          >
+            Order Now
+          </a>
+        </div>
+
+        {/* Farm House */}
+        <div className="mt-8 max-w-sm rounded-2xl border border-white/10 bg-white/5 p-6">
+          <img
+            src="/farm-house.jpg"
+            alt="Farm House Pizza"
+            className="mb-5 h-48 w-full rounded-xl object-cover"
+          />
+
+          <h3 className="text-2xl font-bold">Farm House</h3>
+
+          <p className="mt-2 text-sm text-gray-400">
+            Loaded with fresh vegetables, cheese and delicious toppings.
+          </p>
+
+          <div className="mt-5 space-y-2">
+            <button
+              onClick={() => setFarmHouseSize("Regular")}
+              className="flex w-full justify-between rounded-lg border border-white/10 px-4 py-3 text-left hover:bg-white/10"
+            >
+              <span>Regular</span>
+              <span className="font-bold">₹179</span>
+            </button>
+
+            <button
+              onClick={() => setFarmHouseSize("Medium")}
+              className="flex w-full justify-between rounded-lg border border-white/10 px-4 py-3 text-left hover:bg-white/10"
+            >
+              <span>Medium</span>
+              <span className="font-bold">₹249</span>
+            </button>
+
+            <button
+              onClick={() => setFarmHouseSize("Large")}
+              className="flex w-full justify-between rounded-lg border border-white/10 px-4 py-3 text-left hover:bg-white/10"
+            >
+              <span>Large</span>
+              <span className="font-bold">₹349</span>
+            </button>
+          </div>
+
+          <p className="mt-4 text-sm text-gray-400">
+            Selected:{" "}
+            <span className="text-white">{farmHouseSize}</span>
+          </p>
+
+          <a
+            href={`https://wa.me/919966955540?text=${encodeURIComponent(
+              `Hi Midnight Cravings, I'd like to order a Farm House pizza - ${farmHouseSize} - ₹${farmHousePrice}.`
+            )}`}
+            className="mt-6 block rounded-full bg-orange-500 px-5 py-3 text-center font-bold text-black hover:bg-orange-400"
+          >
+            Order Now
+          </a>
         </div>
       </section>
     </main>
