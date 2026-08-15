@@ -5,6 +5,8 @@ import { useState } from "react";
 export default function Home() {
   const [pizzaSize, setPizzaSize] = useState("Regular");
   const [farmHouseSize, setFarmHouseSize] = useState("Regular");
+  // Keep Veg Delight size selection separate from other pizzas
+const [vegDelightSize, setVegDelightSize] = useState("Regular");
 
   const pizzaPrice =
     pizzaSize === "Regular" ? 179 : pizzaSize === "Medium" ? 249 : 349;
@@ -15,7 +17,12 @@ export default function Home() {
       : farmHouseSize === "Medium"
         ? 249
         : 349;
-
+const vegDelightPrice =
+  vegDelightSize === "Regular"
+    ? 179
+    : vegDelightSize === "Medium"
+      ? 249
+      : 349;
   return (
     <main className="min-h-screen bg-[#0b0b0b] text-white">
       {/* Header */}
@@ -195,6 +202,60 @@ export default function Home() {
             Order Now
           </a>
         </div>
+        {/* Veg Delight */}
+<div className="mt-8 max-w-sm rounded-2xl border border-white/10 bg-white/5 p-6">
+  <img
+    src="/veg-delight.jpg"
+    alt="Veg Delight Pizza"
+    className="mb-5 h-48 w-full rounded-xl object-cover"
+  />
+
+  <h3 className="text-2xl font-bold">Veg Delight</h3>
+
+  <p className="mt-2 text-sm text-gray-400">
+    A delicious mix of fresh vegetables, mushrooms, olives, corn and cheese.
+  </p>
+
+  <div className="mt-5 space-y-2">
+    <button
+      onClick={() => setVegDelightSize("Regular")}
+      className="flex w-full justify-between rounded-lg border border-white/10 px-4 py-3 text-left hover:bg-white/10"
+    >
+      <span>Regular</span>
+      <span className="font-bold">₹179</span>
+    </button>
+
+    <button
+      onClick={() => setVegDelightSize("Medium")}
+      className="flex w-full justify-between rounded-lg border border-white/10 px-4 py-3 text-left hover:bg-white/10"
+    >
+      <span>Medium</span>
+      <span className="font-bold">₹249</span>
+    </button>
+
+    <button
+      onClick={() => setVegDelightSize("Large")}
+      className="flex w-full justify-between rounded-lg border border-white/10 px-4 py-3 text-left hover:bg-white/10"
+    >
+      <span>Large</span>
+      <span className="font-bold">₹349</span>
+    </button>
+  </div>
+
+  <p className="mt-4 text-sm text-gray-400">
+    Selected:{" "}
+    <span className="text-white">{vegDelightSize}</span>
+  </p>
+
+  <a
+    href={`https://wa.me/919966955540?text=${encodeURIComponent(
+      `Hi Midnight Cravings, I'd like to order a Veg Delight pizza - ${vegDelightSize} - ₹${vegDelightPrice}.`
+    )}`}
+    className="mt-6 block rounded-full bg-orange-500 px-5 py-3 text-center font-bold text-black hover:bg-orange-400"
+  >
+    Order Now
+  </a>
+</div>
       </section>
     </main>
   );
