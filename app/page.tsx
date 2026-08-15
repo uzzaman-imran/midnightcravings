@@ -518,8 +518,15 @@ export default function Home() {
     Record<string, PizzaSize>
   >({});
 
-  const [cartCount, setCartCount] = useState(0);
   const [cart, setCart] = useState<CartItem[]>([]);
+  const cartCount = cart.reduce(
+  (total, item) => total + item.quantity,
+  0
+);
+const cartTotal = cart.reduce(
+  (total, item) => total + item.price * item.quantity,
+  0
+);
   const [cartOpen, setCartOpen] = useState(false);
   type CartItem = {
   name: string;
@@ -704,6 +711,17 @@ export default function Home() {
 </div>
     </div>
   ))}
+  <div className="mt-5 border-t border-white/10 pt-5">
+  <div className="flex items-center justify-between">
+    <span className="text-lg font-bold">
+      Total
+    </span>
+
+    <span className="text-xl font-black text-orange-500">
+      ₹{cartTotal}
+    </span>
+  </div>
+</div>
 </div>
   </div>
 )}
@@ -814,7 +832,6 @@ export default function Home() {
     },
   ]);
 
-  setCartCount((count) => count + 1);
 }}
               />
             ))}
