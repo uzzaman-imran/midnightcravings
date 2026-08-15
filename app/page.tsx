@@ -23,6 +23,13 @@ type MenuItem = {
   emoji: string;
 };
 
+type CartItem = {
+  name: string;
+  size?: PizzaSize;
+  price: number;
+  quantity: number;
+};
+
 const PHONE = "9966955540";
 const WHATSAPP = "919966955540";
 
@@ -402,9 +409,13 @@ function SectionTitle({
   );
 }
 
-function MenuCard({ item }: { item: MenuItem }) {
-  const message = `Hi Midnight Cravings, I'd like to order ${item.name} - ₹${item.price}.`;
-
+function MenuCard({
+  item,
+  onAddToCart,
+}: {
+  item: MenuItem;
+  onAddToCart: () => void;
+}) {
   return (
     <div className="rounded-2xl border border-white/10 bg-white/[0.04] p-5 transition hover:border-orange-500/40 hover:bg-white/[0.07]">
       <div className="mb-5 flex h-44 items-center justify-center rounded-xl bg-white/[0.06] text-7xl">
@@ -425,14 +436,12 @@ function MenuCard({ item }: { item: MenuItem }) {
         {item.description}
       </p>
 
-      <a
-        href={whatsappLink(message)}
-        target="_blank"
-        rel="noopener noreferrer"
-        className="mt-5 block rounded-full bg-orange-500 px-5 py-3 text-center font-bold text-black transition hover:bg-orange-400"
+      <button
+        onClick={onAddToCart}
+        className="mt-5 block w-full rounded-full bg-orange-500 px-5 py-3 text-center font-bold text-black transition hover:bg-orange-400"
       >
-        Order Now
-      </a>
+        Add to Cart
+      </button>
     </div>
   );
 }
@@ -519,33 +528,31 @@ export default function Home() {
   >({});
 
   const [cart, setCart] = useState<CartItem[]>([]);
+  const [cartOpen, setCartOpen] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
+
   const cartCount = cart.reduce(
-  (total, item) => total + item.quantity,
-  0
-);
-const cartTotal = cart.reduce(
-  (total, item) => total + item.price * item.quantity,
-  0
-);
-const cartMessage = `Hi Midnight Cravings, I'd like to place this order:
+    (total, item) => total + item.quantity,
+    0
+  );
+
+  const cartTotal = cart.reduce(
+    (total, item) => total + item.price * item.quantity,
+    0
+  );
+
+  const cartMessage = `Hi Midnight Cravings, I'd like to place this order:
 
 ${cart
   .map(
     (item) =>
-      `${item.name} - ${item.size} - ₹${item.price} x ${item.quantity}`
+      `${item.name}${
+        item.size ? ` - ${item.size}` : ""
+      } - ₹${item.price} x ${item.quantity}`
   )
   .join("\n")}
 
 Total: ₹${cartTotal}`;
-  const [cartOpen, setCartOpen] = useState(false);
-  type CartItem = {
-  name: string;
-  size: PizzaSize;
-  price: number;
-  quantity: number;
-};
-
-  const [menuOpen, setMenuOpen] = useState(false);
 
   function getPizzaSize(name: string): PizzaSize {
     return pizzaSelections[name] || "Regular";
@@ -559,6 +566,41 @@ Total: ₹${cartTotal}`;
       ...current,
       [name]: size,
     }));
+  }
+
+  function addToCart(
+    name: string,
+    price: number,
+    size?: PizzaSize
+  ) {
+    setCart((current) => {
+      const existingIndex = current.findIndex(
+        (item) =>
+          item.name === name &&
+          item.size === size
+      );
+
+      if (existingIndex !== -1) {
+        return current.map((item, index) =>
+          index === existingIndex
+            ? {
+                ...item,
+                quantity: item.quantity + 1,
+              }
+            : item
+        );
+      }
+
+      return [
+        ...current,
+        {
+          name,
+          size,
+          price,
+          quantity: 1,
+        },
+      ];
+    });
   }
 
   return (
@@ -588,11 +630,11 @@ Total: ₹${cartTotal}`;
             </a>
 
             <button
-  onClick={() => setCartOpen(true)}
-  className="rounded-full border border-white/15 px-5 py-2.5 text-sm font-bold hover:bg-white/10"
->
-  🛒 Cart ({cartCount})
-</button>
+              onClick={() => setCartOpen(true)}
+              className="rounded-full border border-white/15 px-5 py-2.5 text-sm font-bold hover:bg-white/10"
+            >
+              🛒 Cart ({cartCount})
+            </button>
 
             <a
               href={`tel:${PHONE}`}
@@ -622,6 +664,10 @@ Total: ₹${cartTotal}`;
               </a>
 
               <button
+                onClick={() => {
+                  setCartOpen(true);
+                  setMenuOpen(false);
+                }}
                 className="rounded-full border border-white/15 px-5 py-3 font-bold hover:bg-white/10"
               >
                 🛒 Cart ({cartCount})
@@ -637,140 +683,153 @@ Total: ₹${cartTotal}`;
           </div>
         )}
       </header>
+
+      {/* Cart Panel */}
       {cartOpen && (
-  <div className="fixed right-2 top-20 z-[60] w-[calc(100%-1rem)] max-w-sm rounded-2xl border border-white/10 bg-[#151515] p-5 shadow-2xl sm:right-5 sm:top-24 sm:w-80">
-    <div className="flex items-center justify-between">
-      <h2 className="text-xl font-black">Your Cart</h2>
+        <div className="fixed right-2 top-20 z-[60] w-[calc(100%-1rem)] max-w-sm rounded-2xl border border-white/10 bg-[#151515] p-5 shadow-2xl sm:right-5 sm:top-24 sm:w-80">
+          <div className="flex items-center justify-between">
+            <h2 className="text-xl font-black">
+              Your Cart
+            </h2>
 
-      <button
-        onClick={() => setCartOpen(false)}
-        className="rounded-lg px-3 py-1 text-gray-400 hover:bg-white/10 hover:text-white"
-      >
-        ✕
-      </button>
-    </div>
+            <button
+              onClick={() => setCartOpen(false)}
+              className="rounded-lg px-3 py-1 text-gray-400 hover:bg-white/10 hover:text-white"
+            >
+              ✕
+            </button>
+          </div>
 
-   {cart.length === 0 && (
-  <div className="mt-8 rounded-xl border border-white/10 bg-white/[0.04] p-6 text-center">
-    <div className="text-5xl">🛒</div>
+          {cart.length === 0 && (
+            <div className="mt-8 rounded-xl border border-white/10 bg-white/[0.04] p-6 text-center">
+              <div className="text-5xl">🛒</div>
 
-    <h3 className="mt-4 text-lg font-bold">
-      Your cart is empty
-    </h3>
+              <h3 className="mt-4 text-lg font-bold">
+                Your cart is empty
+              </h3>
 
-    <p className="mt-2 text-sm text-gray-400">
-      Add something delicious to get started.
-    </p>
+              <p className="mt-2 text-sm text-gray-400">
+                Add something delicious to get started.
+              </p>
 
-    <button
-      onClick={() => setCartOpen(false)}
-      className="mt-5 rounded-full bg-orange-500 px-5 py-3 font-bold text-black hover:bg-orange-400"
-    >
-      Browse Menu
-    </button>
-  </div>
-)} <div className="mt-5 space-y-3">
-  {cart.map((item, index) => (
-    <div
-      key={index}
-      className="rounded-xl border border-white/10 bg-white/[0.04] p-4"
-    >
-      <div className="flex items-start justify-between gap-3">
-        <div>
-          <h3 className="font-bold">{item.name}</h3>
+              <button
+                onClick={() => setCartOpen(false)}
+                className="mt-5 rounded-full bg-orange-500 px-5 py-3 font-bold text-black hover:bg-orange-400"
+              >
+                Browse Menu
+              </button>
+            </div>
+          )}
 
-          <p className="mt-1 text-sm text-gray-400">
-            {item.size}
-          </p>
+          <div className="mt-5 space-y-3">
+            {cart.map((item, index) => (
+              <div
+                key={`${item.name}-${item.size ?? "none"}-${index}`}
+                className="rounded-xl border border-white/10 bg-white/[0.04] p-4"
+              >
+                <div className="flex items-start justify-between gap-3">
+                  <div>
+                    <h3 className="font-bold">
+                      {item.name}
+                    </h3>
+
+                    {item.size && (
+                      <p className="mt-1 text-sm text-gray-400">
+                        {item.size}
+                      </p>
+                    )}
+                  </div>
+
+                  <span className="font-bold text-orange-500">
+                    ₹{item.price}
+                  </span>
+                </div>
+
+                <div className="mt-3 flex items-center justify-between">
+                  <span className="text-sm text-gray-400">
+                    Quantity
+                  </span>
+
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={() => {
+                        setCart((current) =>
+                          current
+                            .map((cartItem, cartIndex) =>
+                              cartIndex === index
+                                ? {
+                                    ...cartItem,
+                                    quantity:
+                                      cartItem.quantity - 1,
+                                  }
+                                : cartItem
+                            )
+                            .filter(
+                              (cartItem) =>
+                                cartItem.quantity > 0
+                            )
+                        );
+                      }}
+                      className="flex h-8 w-8 items-center justify-center rounded-lg border border-white/10 hover:bg-white/10"
+                    >
+                      −
+                    </button>
+
+                    <span className="w-6 text-center font-bold">
+                      {item.quantity}
+                    </span>
+
+                    <button
+                      onClick={() => {
+                        setCart((current) =>
+                          current.map(
+                            (cartItem, cartIndex) =>
+                              cartIndex === index
+                                ? {
+                                    ...cartItem,
+                                    quantity:
+                                      cartItem.quantity + 1,
+                                  }
+                                : cartItem
+                          )
+                        );
+                      }}
+                      className="flex h-8 w-8 items-center justify-center rounded-lg border border-white/10 hover:bg-white/10"
+                    >
+                      +
+                    </button>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {cart.length > 0 && (
+            <>
+              <div className="mt-5 border-t border-white/10 pt-5">
+                <div className="flex items-center justify-between">
+                  <span className="text-lg font-bold">
+                    Total
+                  </span>
+
+                  <span className="text-xl font-black text-orange-500">
+                    ₹{cartTotal}
+                  </span>
+                </div>
+              </div>
+
+              <a
+                href={whatsappLink(cartMessage)}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="mt-5 block w-full rounded-full bg-orange-500 px-5 py-3 text-center font-bold text-black transition hover:bg-orange-400"
+              >
+                Order on WhatsApp
+              </a>
+            </>
+          )}
         </div>
-
-        <span className="font-bold text-orange-500">
-          ₹{item.price}
-        </span>
-      </div>
-
-      <div className="mt-3 flex items-center justify-between">
-  <span className="text-sm text-gray-400">
-    Quantity
-  </span>
-
-  <div className="flex items-center gap-2">
-    <button
-  onClick={() => {
-    setCart((current) =>
-      current
-        .map((cartItem, cartIndex) =>
-          cartIndex === index
-            ? {
-                ...cartItem,
-                quantity: cartItem.quantity - 1,
-              }
-            : cartItem
-        )
-        .filter((cartItem) => cartItem.quantity > 0)
-    );
-  }}
-  className="flex h-8 w-8 items-center justify-center rounded-lg border border-white/10 hover:bg-white/10"
->
-  −
-</button>
-
-    <span className="w-6 text-center font-bold">
-      {item.quantity}
-    </span>
-
-    <button
-  onClick={() => {
-    setCart((current) =>
-      current.map((cartItem, cartIndex) =>
-        cartIndex === index
-          ? {
-              ...cartItem,
-              quantity: cartItem.quantity + 1,
-            }
-          : cartItem
-      )
-    );
-  }}
-  className="flex h-8 w-8 items-center justify-center rounded-lg border border-white/10 hover:bg-white/10"
->
-  +
-</button>
-  </div>
-</div>
-    </div>
-  ))}
-  <div className="mt-5 border-t border-white/10 pt-5">
-  <div className="flex items-center justify-between">
-    <span className="text-lg font-bold">
-      Total
-    </span>
-
-    <span className="text-xl font-black text-orange-500">
-      ₹{cartTotal}
-    </span>
-  </div>
-</div>
-<a
-  href={cart.length > 0 ? whatsappLink(cartMessage) : "#"}
-  target="_blank"
-  rel="noopener noreferrer"
-  className={`mt-5 block w-full rounded-full px-5 py-3 text-center font-bold transition ${
-    cart.length > 0
-      ? "bg-orange-500 text-black hover:bg-orange-400"
-      : "cursor-not-allowed bg-white/10 text-gray-500"
-  }`}
-  onClick={(event) => {
-    if (cart.length === 0) {
-      event.preventDefault();
-    }
-  }}
->
-  Order on WhatsApp
-</a>
-</div>
-  </div>
-)}
+      )}
 
       {/* Independence Day Offer */}
       <section className="border-b border-orange-500/20 bg-gradient-to-r from-orange-500/10 via-white/[0.03] to-green-500/10">
@@ -865,20 +924,15 @@ Total: ₹${cartTotal}`;
                   setPizzaSize(pizza.name, size)
                 }
                 onAddToCart={() => {
-  const size = getPizzaSize(pizza.name);
-  const price = pizza.prices[size];
+                  const size = getPizzaSize(pizza.name);
+                  const price = pizza.prices[size];
 
-  setCart((current) => [
-    ...current,
-    {
-      name: pizza.name,
-      size,
-      price,
-      quantity: 1,
-    },
-  ]);
-
-}}
+                  addToCart(
+                    pizza.name,
+                    price,
+                    size
+                  );
+                }}
               />
             ))}
           </div>
@@ -897,6 +951,12 @@ Total: ₹${cartTotal}`;
               <MenuCard
                 key={item.name}
                 item={item}
+                onAddToCart={() =>
+                  addToCart(
+                    item.name,
+                    item.price
+                  )
+                }
               />
             ))}
           </div>
@@ -915,6 +975,12 @@ Total: ₹${cartTotal}`;
               <MenuCard
                 key={item.name}
                 item={item}
+                onAddToCart={() =>
+                  addToCart(
+                    item.name,
+                    item.price
+                  )
+                }
               />
             ))}
           </div>
@@ -933,6 +999,12 @@ Total: ₹${cartTotal}`;
               <MenuCard
                 key={item.name}
                 item={item}
+                onAddToCart={() =>
+                  addToCart(
+                    item.name,
+                    item.price
+                  )
+                }
               />
             ))}
           </div>
@@ -951,6 +1023,12 @@ Total: ₹${cartTotal}`;
               <MenuCard
                 key={item.name}
                 item={item}
+                onAddToCart={() =>
+                  addToCart(
+                    item.name,
+                    item.price
+                  )
+                }
               />
             ))}
           </div>
@@ -969,6 +1047,12 @@ Total: ₹${cartTotal}`;
               <MenuCard
                 key={item.name}
                 item={item}
+                onAddToCart={() =>
+                  addToCart(
+                    item.name,
+                    item.price
+                  )
+                }
               />
             ))}
           </div>
@@ -987,6 +1071,12 @@ Total: ₹${cartTotal}`;
               <MenuCard
                 key={item.name}
                 item={item}
+                onAddToCart={() =>
+                  addToCart(
+                    item.name,
+                    item.price
+                  )
+                }
               />
             ))}
           </div>
@@ -1005,6 +1095,12 @@ Total: ₹${cartTotal}`;
               <MenuCard
                 key={item.name}
                 item={item}
+                onAddToCart={() =>
+                  addToCart(
+                    item.name,
+                    item.price
+                  )
+                }
               />
             ))}
           </div>
