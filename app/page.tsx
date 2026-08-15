@@ -7,6 +7,8 @@ export default function Home() {
   const [farmHouseSize, setFarmHouseSize] = useState("Regular");
   // Keep Veg Delight size selection separate from other pizzas
 const [vegDelightSize, setVegDelightSize] = useState("Regular");
+// Keep Paneer Tikka size selection separate
+const [paneerTikkaSize, setPaneerTikkaSize] = useState("Regular");
 
   const pizzaPrice =
     pizzaSize === "Regular" ? 179 : pizzaSize === "Medium" ? 249 : 349;
@@ -23,6 +25,12 @@ const vegDelightPrice =
     : vegDelightSize === "Medium"
       ? 249
       : 349;
+      const paneerTikkaPrice =
+  paneerTikkaSize === "Regular"
+    ? 229
+    : paneerTikkaSize === "Medium"
+      ? 319
+      : 419;
   return (
     <main className="min-h-screen bg-[#0b0b0b] text-white">
       {/* Header */}
@@ -250,6 +258,60 @@ const vegDelightPrice =
   <a
     href={`https://wa.me/919966955540?text=${encodeURIComponent(
       `Hi Midnight Cravings, I'd like to order a Veg Delight pizza - ${vegDelightSize} - ₹${vegDelightPrice}.`
+    )}`}
+    className="mt-6 block rounded-full bg-orange-500 px-5 py-3 text-center font-bold text-black hover:bg-orange-400"
+  >
+    Order Now
+  </a>
+</div>
+{/* Paneer Tikka */}
+<div className="mt-8 max-w-sm rounded-2xl border border-white/10 bg-white/5 p-6">
+  <img
+    src="/paneer-tikka.jpg"
+    alt="Paneer Tikka Pizza"
+    className="mb-5 h-48 w-full rounded-xl object-cover"
+  />
+
+  <h3 className="text-2xl font-bold">Paneer Tikka</h3>
+
+  <p className="mt-2 text-sm text-gray-400">
+    Spicy paneer tikka with onions, peppers, cheese and delicious spices.
+  </p>
+
+  <div className="mt-5 space-y-2">
+    <button
+      onClick={() => setPaneerTikkaSize("Regular")}
+      className="flex w-full justify-between rounded-lg border border-white/10 px-4 py-3 text-left hover:bg-white/10"
+    >
+      <span>Regular</span>
+      <span className="font-bold">₹229</span>
+    </button>
+
+    <button
+      onClick={() => setPaneerTikkaSize("Medium")}
+      className="flex w-full justify-between rounded-lg border border-white/10 px-4 py-3 text-left hover:bg-white/10"
+    >
+      <span>Medium</span>
+      <span className="font-bold">₹319</span>
+    </button>
+
+    <button
+      onClick={() => setPaneerTikkaSize("Large")}
+      className="flex w-full justify-between rounded-lg border border-white/10 px-4 py-3 text-left hover:bg-white/10"
+    >
+      <span>Large</span>
+      <span className="font-bold">₹419</span>
+    </button>
+  </div>
+
+  <p className="mt-4 text-sm text-gray-400">
+    Selected:{" "}
+    <span className="text-white">{paneerTikkaSize}</span>
+  </p>
+
+  <a
+    href={`https://wa.me/919966955540?text=${encodeURIComponent(
+      `Hi Midnight Cravings, I'd like to order a Paneer Tikka pizza - ${paneerTikkaSize} - ₹${paneerTikkaPrice}.`
     )}`}
     className="mt-6 block rounded-full bg-orange-500 px-5 py-3 text-center font-bold text-black hover:bg-orange-400"
   >
