@@ -1,8 +1,8 @@
 "use client";
 
-import { FormEvent, useEffect, useState } from "react";
+import { ChangeEvent, FormEvent, useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
-import { usePathname, useRouter } from "next/navigation";       
+import { usePathname, useRouter } from "next/navigation";
 
 type Product = {
   id: number;
@@ -27,6 +27,7 @@ export default function EditProductPage() {
 
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [uploading, setUploading] = useState(false);
   const [error, setError] = useState("");
 
   const [name, setName] = useState("");
@@ -76,9 +77,7 @@ export default function EditProductPage() {
       setName(product.name);
       setCategory(product.category);
       setDescription(product.description ?? "");
-      setPrice(
-        product.price !== null ? String(product.price) : ""
-      );
+      setPrice(product.price !== null ? String(product.price) : "");
       setImageUrl(product.image_url ?? "");
       setPriceRegular(
         product.price_regular !== null
@@ -103,6 +102,77 @@ export default function EditProductPage() {
 
     loadProduct();
   }, [productId, router, supabase]);
+
+  async function handleImageUpload(
+    event: ChangeEvent<HTMLInputElement>
+  ) {
+    const file = event.target.files?.[0];
+
+    if (!file) {
+      return;
+    }
+
+    setError("");
+    setUploading(true);
+
+    try {
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+
+      if (!user) {
+        router.replace("/manager/login");
+        return;
+      }
+
+      if (!file.type.startsWith("image/")) {
+        setError("Please select an image file.");
+        setUploading(false);
+        return;
+      }
+
+      const fileExtension = file.name.split(".").pop()?.toLowerCase();
+
+      if (!fileExtension) {
+        setError("Unable to determine the image file type.");
+        setUploading(false);
+        return;
+      }
+
+      const fileName = `${productId}-${Date.now()}.${fileExtension}`;
+
+      const filePath = fileName;
+
+      const { error: uploadError } = await supabase.storage
+        .from("product-images")
+        .upload(filePath, file, {
+          cacheControl: "3600",
+          upsert: false,
+        });
+
+      if (uploadError) {
+        setError(uploadError.message);
+        setUploading(false);
+        return;
+      }
+
+      const {
+        data: { publicUrl },
+      } = supabase.storage
+        .from("product-images")
+        .getPublicUrl(filePath);
+
+      setImageUrl(publicUrl);
+    } catch (uploadError) {
+      setError(
+        uploadError instanceof Error
+          ? uploadError.message
+          : "Unable to upload image."
+      );
+    }
+
+    setUploading(false);
+  }
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -271,20 +341,47 @@ export default function EditProductPage() {
           </div>
 
           <div>
+            <h3 className="mb-4 text-lg font-semibold">
+              Product Image
+            </h3>
+
+            {imageUrl ? (
+              <div className="mb-4 overflow-hidden rounded-xl border border-white/10 bg-neutral-800">
+                <img
+                  src={imageUrl}
+                  alt={name || "Product"}
+                  className="h-64 w-full object-cover"
+                />
+              </div>
+            ) : (
+              <div className="mb-4 flex h-64 items-center justify-center rounded-xl border border-white/10 bg-neutral-800 text-neutral-500">
+                No image
+              </div>
+            )}
+
             <label
-              htmlFor="imageUrl"
-              className="mb-2 block text-sm font-medium"
+              htmlFor="productImage"
+              className={`inline-flex cursor-pointer items-center rounded-lg border border-orange-500/40 px-5 py-3 text-sm font-semibold text-orange-400 transition hover:bg-orange-500 hover:text-white ${
+                uploading
+                  ? "cursor-not-allowed opacity-50"
+                  : ""
+              }`}
             >
-              Image URL
+              {uploading ? "Uploading image..." : "Choose Image"}
+
+              <input
+                id="productImage"
+                type="file"
+                accept="image/*"
+                onChange={handleImageUpload}
+                disabled={uploading}
+                className="hidden"
+              />
             </label>
 
-            <input
-              id="imageUrl"
-              type="url"
-              value={imageUrl}
-              onChange={(event) => setImageUrl(event.target.value)}
-              className="w-full rounded-lg border border-white/10 bg-neutral-800 px-4 py-3 text-white outline-none focus:border-orange-400"
-            />
+            <p className="mt-2 text-xs text-neutral-500">
+              Choose a new image to replace the current product image.
+            </p>
           </div>
 
           <div>
@@ -444,7 +541,7 @@ export default function EditProductPage() {
 
             <button
               type="submit"
-              disabled={saving}
+              disabled={saving || uploading}
               className="rounded-lg bg-orange-500 px-5 py-3 font-semibold transition hover:bg-orange-600 disabled:cursor-not-allowed disabled:opacity-50"
             >
               {saving ? "Saving changes..." : "Save changes"}
