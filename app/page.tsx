@@ -1,29 +1,26 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { createClient } from "@/lib/supabase/client";
 
 type PizzaSize = "Regular" | "Medium" | "Large";
 
-type Pizza = {
+type Product = {
+  id: number;
   name: string;
-  description: string;
-  prices: {
-    Regular: number;
-    Medium: number;
-    Large: number;
-  };
-  emoji: string;
-  image?: string;
-};
-
-type MenuItem = {
-  name: string;
-  price: number;
-  description: string;
-  emoji: string;
+  category: string;
+  description: string | null;
+  price: number | null;
+  image_url: string | null;
+  is_available: boolean | null;
+  is_active: boolean | null;
+  price_regular: number | null;
+  price_medium: number | null;
+  price_large: number | null;
 };
 
 type CartItem = {
+  id: number;
   name: string;
   size?: PizzaSize;
   price: number;
@@ -33,358 +30,62 @@ type CartItem = {
 const PHONE = "9966955540";
 const WHATSAPP = "919966955540";
 
-const pizzas: Pizza[] = [
-  {
-    name: "Margherita",
-    description: "Classic cheesy Margherita pizza.",
-    prices: { Regular: 179, Medium: 249, Large: 349 },
-    emoji: "🍕",
-    image: "/margherita.jpg",
-  },
-  {
-    name: "Farm House",
-    description:
-      "Loaded with fresh vegetables, cheese and delicious toppings.",
-    prices: { Regular: 179, Medium: 249, Large: 349 },
-    emoji: "🍕",
-    image: "/farm-house.jpg",
-  },
-  {
-    name: "Veg Delight",
-    description:
-      "Fresh vegetables, mushrooms, olives, corn and cheese.",
-    prices: { Regular: 179, Medium: 249, Large: 349 },
-    emoji: "🍕",
-    image: "/veg-delight.jpg",
-  },
-  {
-    name: "Paneer Tikka",
-    description:
-      "Spicy paneer tikka with onions, peppers and cheese.",
-    prices: { Regular: 229, Medium: 319, Large: 419 },
-    emoji: "🍕",
-    image: "/paneer-tikka.jpg",
-  },
-  {
-    name: "Margherita + Farm House",
-    description:
-      "Half Margherita and half Farm House on one pizza.",
-    prices: { Regular: 179, Medium: 249, Large: 349 },
-    emoji: "🍕",
-    image: "/margherita-farm-house.jpg",
-  },
-  {
-    name: "Paneer Tikka + Veg Delight",
-    description:
-      "Half Paneer Tikka and half Veg Delight.",
-    prices: { Regular: 199, Medium: 289, Large: 389 },
-    emoji: "🍕",
-  },
-  {
-    name: "Chicken Pepperoni",
-    description:
-      "Classic chicken pepperoni pizza.",
-    prices: { Regular: 229, Medium: 319, Large: 419 },
-    emoji: "🍕",
-  },
-  {
-    name: "BBQ Chicken Pepperoni",
-    description:
-      "Chicken pepperoni with smoky BBQ flavor.",
-    prices: { Regular: 249, Medium: 349, Large: 449 },
-    emoji: "🍕",
-  },
-  {
-    name: "Peri Peri Chicken Pepperoni",
-    description:
-      "Chicken pepperoni with spicy peri peri seasoning.",
-    prices: { Regular: 249, Medium: 349, Large: 449 },
-    emoji: "🍕",
-  },
-  {
-    name: "Spicy Chicken Pepperoni",
-    description:
-      "Chicken pepperoni with an extra spicy kick.",
-    prices: { Regular: 249, Medium: 349, Large: 449 },
-    emoji: "🍕",
-  },
-  {
-    name: "Chicken Pepperoni + BBQ Chicken",
-    description:
-      "Half Chicken Pepperoni and half BBQ Chicken.",
-    prices: { Regular: 239, Medium: 339, Large: 439 },
-    emoji: "🍕",
-  },
-  {
-    name: "Peri Peri Chicken + Spicy Chicken",
-    description:
-      "A spicy half-and-half chicken pizza.",
-    prices: { Regular: 239, Medium: 339, Large: 439 },
-    emoji: "🍕",
-  },
-  {
-    name: "Corn Pizza",
-    description:
-      "Sweet corn, cheese and delicious pizza sauce.",
-    prices: { Regular: 179, Medium: 249, Large: 349 },
-    emoji: "🌽",
-  },
+const categoryOrder = [
+  "Pizzas",
+  "Burgers",
+  "Wraps",
+  "Sandwiches",
+  "Combos",
+  "Fries",
+  "Mocktails",
+  "Milkshakes",
 ];
 
-const burgers: MenuItem[] = [
-  {
-    name: "Classic Zinzer",
-    price: 229,
-    description:
-      "Chicken zinzer, yellow cheese, tomato, cucumber, jalapeño, onion and sauces.",
-    emoji: "🍔",
-  },
-  {
-    name: "Jalapeno Delight",
-    price: 229,
-    description:
-      "Chicken zinzer, American cheese, jalapeño, western veggies, onion and sauces.",
-    emoji: "🍔",
-  },
-  {
-    name: "Cheese Burst",
-    price: 259,
-    description:
-      "Chicken zinzer, double yellow cheese, red paprika, chipotle sauce, garlic sauce and lettuce.",
-    emoji: "🍔",
-  },
-  {
-    name: "Spicy Paneer Burger",
-    price: 169,
-    description:
-      "Spicy paneer patty, cheese, lettuce, onion and spicy mayo.",
-    emoji: "🍔",
-  },
-  {
-    name: "Crispy Veg Burger",
-    price: 149,
-    description:
-      "Crispy veg patty, lettuce, tomato, onion and tandoori mayo.",
-    emoji: "🍔",
-  },
-  {
-    name: "Loaded Cheese Burger",
-    price: 199,
-    description:
-      "Double patty, double cheese, pickles, jalapeños and special sauce.",
-    emoji: "🍔",
-  },
-  {
-    name: "Beef Burger",
-    price: 199,
-    description:
-      "Beef patty, cheese, lettuce, tomato, onion and signature sauce.",
-    emoji: "🍔",
-  },
-];
+const categorySubtitle: Record<string, string> = {
+  Pizzas: "Freshly made",
+  Burgers: "Big flavour",
+  Wraps: "Wrapped fresh",
+  Sandwiches: "Fresh & loaded",
+  Combos: "More for less",
+  Fries: "Crispy & loaded",
+  Mocktails: "Cool & refreshing",
+  Milkshakes: "Thick & creamy",
+};
 
-const wraps: MenuItem[] = [
-  {
-    name: "Paneer Tikka Wrap",
-    price: 149,
-    description:
-      "Paneer tikka, onion, capsicum, lettuce and mint mayo.",
-    emoji: "🌯",
-  },
-  {
-    name: "Schezwan Wrap",
-    price: 149,
-    description:
-      "Schezwan rice, crispy vegetables, cabbage and schezwan mayo.",
-    emoji: "🌯",
-  },
-  {
-    name: "Chicken Fried Wrap",
-    price: 149,
-    description:
-      "Chicken fried strips, lettuce, onion and garlic mayo.",
-    emoji: "🌯",
-  },
-  {
-    name: "Regular Chicken Wrap",
-    price: 149,
-    description:
-      "Chicken tikka, onion, capsicum, lettuce and mint mayo.",
-    emoji: "🌯",
-  },
-  {
-    name: "Beef Wrap",
-    price: 169,
-    description:
-      "Beef strips, lettuce, onion, fries and special sauce.",
-    emoji: "🌯",
-  },
-];
-
-const sandwiches: MenuItem[] = [
-  {
-    name: "Chicken Sandwich",
-    price: 129,
-    description:
-      "Fresh chicken sandwich with creamy sauces.",
-    emoji: "🥪",
-  },
-  {
-    name: "Paneer Cheese Sandwich",
-    price: 149,
-    description:
-      "Paneer, cheese, tomato, onion and mayo sauce.",
-    emoji: "🥪",
-  },
-  {
-    name: "Veg Grilled Sandwich",
-    price: 129,
-    description:
-      "Crunchy vegetables, cheese and green chutney.",
-    emoji: "🥪",
-  },
-  {
-    name: "Corn & Cheese Sandwich",
-    price: 129,
-    description:
-      "Sweet corn, cheese, mayo and herbs.",
-    emoji: "🥪",
-  },
-  {
-    name: "Club Sandwich",
-    price: 189,
-    description:
-      "Veg or chicken, lettuce, tomato, mayo and fries.",
-    emoji: "🥪",
-  },
-];
-
-const fries: MenuItem[] = [
-  {
-    name: "Salty Fries",
-    price: 129,
-    description:
-      "Crispy fries with peri peri salt seasoning.",
-    emoji: "🍟",
-  },
-  {
-    name: "Peri Peri Fries",
-    price: 149,
-    description:
-      "Crispy fries tossed in peri peri spices.",
-    emoji: "🍟",
-  },
-  {
-    name: "Cheese Fries",
-    price: 169,
-    description:
-      "Fries topped with cheesy sauce.",
-    emoji: "🍟",
-  },
-  {
-    name: "Loaded Fries",
-    price: 179,
-    description:
-      "Fries loaded with cheese sauce and special toppings.",
-    emoji: "🍟",
-  },
-];
-
-const mocktails: MenuItem[] = [
-  {
-    name: "Blue Lagoon",
-    price: 79,
-    description:
-      "Blue curacao, lemon, soda and ice.",
-    emoji: "🍹",
-  },
-  {
-    name: "Green Apple Mojito",
-    price: 79,
-    description:
-      "Green apple syrup, lime, mint, soda and ice.",
-    emoji: "🍹",
-  },
-  {
-    name: "Strawberry Mojito",
-    price: 79,
-    description:
-      "Strawberry syrup, mint, lime, soda and ice.",
-    emoji: "🍹",
-  },
-  {
-    name: "Watermelon Cooler",
-    price: 79,
-    description:
-      "Watermelon, lime, mint, soda and ice.",
-    emoji: "🍹",
-  },
-  {
-    name: "Virgin Mojito",
-    price: 79,
-    description:
-      "Lime, mint, sugar syrup and ice.",
-    emoji: "🍹",
-  },
-];
-
-const milkshakes: MenuItem[] = [
-  {
-    name: "Chocolate Shake",
-    price: 149,
-    description:
-      "Chocolate ice cream, milk and chocolate syrup.",
-    emoji: "🥤",
-  },
-  {
-    name: "Oreo Shake",
-    price: 169,
-    description:
-      "Oreo, vanilla ice cream and milk.",
-    emoji: "🥤",
-  },
-  {
-    name: "Strawberry Shake",
-    price: 149,
-    description:
-      "Strawberry ice cream, milk and strawberry syrup.",
-    emoji: "🥤",
-  },
-  {
-    name: "Vanilla Shake",
-    price: 149,
-    description:
-      "Vanilla ice cream, milk and vanilla syrup.",
-    emoji: "🥤",
-  },
-];
-
-const combos: MenuItem[] = [
-  {
-    name: "Burger Combo",
-    price: 329,
-    description:
-      "Any burger + fries + cold drink.",
-    emoji: "🍔🍟🥤",
-  },
-  {
-    name: "Wrap Combo",
-    price: 309,
-    description:
-      "Any wrap + fries + cold drink.",
-    emoji: "🌯🍟🥤",
-  },
-  {
-    name: "Midnight Meal",
-    price: 499,
-    description:
-      "Any burger + wrap + fries + 2 cold drinks.",
-    emoji: "🍔🌯🍟🥤",
-  },
-];
+const categoryEmoji: Record<string, string> = {
+  Pizzas: "🍕",
+  Burgers: "🍔",
+  Wraps: "🌯",
+  Sandwiches: "🥪",
+  Combos: "🍔🍟🥤",
+  Fries: "🍟",
+  Mocktails: "🍹",
+  Milkshakes: "🥤",
+};
 
 function whatsappLink(message: string) {
   return `https://wa.me/${WHATSAPP}?text=${encodeURIComponent(message)}`;
+}
+
+function getCategoryKey(category: string) {
+  const value = category.trim().toLowerCase();
+
+  if (value === "pizza" || value === "pizzas") return "Pizzas";
+  if (value === "burger" || value === "burgers") return "Burgers";
+  if (value === "wrap" || value === "wraps") return "Wraps";
+  if (value === "sandwich" || value === "sandwiches") {
+    return "Sandwiches";
+  }
+  if (value === "combo" || value === "combos") return "Combos";
+  if (value === "fries" || value === "fry") return "Fries";
+  if (value === "mocktail" || value === "mocktails") {
+    return "Mocktails";
+  }
+  if (value === "milkshake" || value === "milkshakes") {
+    return "Milkshakes";
+  }
+
+  return category;
 }
 
 function SectionTitle({
@@ -409,127 +110,268 @@ function SectionTitle({
   );
 }
 
-function MenuCard({
-  item,
-  onAddToCart,
-}: {
-  item: MenuItem;
-  onAddToCart: () => void;
-}) {
-  return (
-    <div className="rounded-2xl border border-white/10 bg-white/[0.04] p-5 transition hover:border-orange-500/40 hover:bg-white/[0.07]">
-      <div className="mb-5 flex h-44 items-center justify-center rounded-xl bg-white/[0.06] text-7xl">
-        {item.emoji}
-      </div>
-
-      <div className="flex items-start justify-between gap-4">
-        <h3 className="text-xl font-bold">
-          {item.name}
-        </h3>
-
-        <span className="whitespace-nowrap text-lg font-black text-orange-500">
-          ₹{item.price}
-        </span>
-      </div>
-
-      <p className="mt-2 min-h-[48px] text-sm leading-6 text-gray-400">
-        {item.description}
-      </p>
-
-      <button
-        onClick={onAddToCart}
-        className="mt-5 block w-full rounded-full bg-orange-500 px-5 py-3 text-center font-bold text-black transition hover:bg-orange-400"
-      >
-        Add to Cart
-      </button>
-    </div>
-  );
-}
-
-function PizzaCard({
-  pizza,
+function ProductCard({
+  product,
   selectedSize,
   onSizeChange,
   onAddToCart,
 }: {
-  pizza: Pizza;
+  product: Product;
   selectedSize: PizzaSize;
   onSizeChange: (size: PizzaSize) => void;
-  onAddToCart: () => void;
+  onAddToCart: (product: Product, size?: PizzaSize) => void;
 }) {
-  const price = pizza.prices[selectedSize];
+  const isPizza =
+    getCategoryKey(product.category) === "Pizzas";
+
+  const regular =
+    product.price_regular ?? product.price ?? 0;
+
+  const medium =
+    product.price_medium ?? regular;
+
+  const large =
+    product.price_large ?? regular;
+
+  const selectedPrice =
+    selectedSize === "Regular"
+      ? regular
+      : selectedSize === "Medium"
+        ? medium
+        : large;
+
+  const available = product.is_available === true;
 
   return (
-    <div className="rounded-2xl border border-white/10 bg-white/[0.04] p-5 transition hover:border-orange-500/40 hover:bg-white/[0.07]">
-      {pizza.image ? (
-        <img
-          src={pizza.image}
-          alt={pizza.name}
-          className="mb-5 h-48 w-full rounded-xl object-cover"
-        />
-      ) : (
-        <div className="mb-5 flex h-48 items-center justify-center rounded-xl bg-white/[0.06] text-8xl">
-          {pizza.emoji}
+    <div
+      className={`relative overflow-hidden rounded-2xl border bg-white/[0.04] p-5 transition ${
+        available
+          ? "border-white/10 hover:border-orange-500/40 hover:bg-white/[0.07]"
+          : "border-red-500/30"
+      }`}
+    >
+      {!available && (
+        <div className="absolute left-1/2 top-20 z-10 -translate-x-1/2 rounded-full bg-red-500 px-4 py-2 text-sm font-bold text-white shadow-lg">
+          Unavailable
         </div>
       )}
 
+      {product.image_url ? (
+        <img
+          src={product.image_url}
+          alt={product.name}
+          className={`mb-5 h-48 w-full rounded-xl object-cover ${
+            !available ? "opacity-50 grayscale-[20%]" : ""
+          }`}
+        />
+      ) : (
+        <div
+          className={`mb-5 flex h-48 items-center justify-center rounded-xl bg-white/[0.06] text-7xl ${
+            !available ? "opacity-50" : ""
+          }`}
+        >
+          {categoryEmoji[getCategoryKey(product.category)] ?? "🍽️"}
+        </div>
+      )}
+
+      <p className="mb-2 text-xs font-bold uppercase tracking-wider text-orange-400">
+        {getCategoryKey(product.category)}
+      </p>
+
       <h3 className="text-2xl font-bold">
-        {pizza.name}
+        {product.name}
       </h3>
 
       <p className="mt-2 min-h-[48px] text-sm leading-6 text-gray-400">
-        {pizza.description}
+        {product.description || "Freshly made for your cravings."}
       </p>
 
-      <div className="mt-5 grid grid-cols-3 gap-2">
-        {(["Regular", "Medium", "Large"] as PizzaSize[]).map(
-          (size) => (
-            <button
-              key={size}
-              onClick={() => onSizeChange(size)}
-              className={`rounded-lg border px-2 py-3 text-center text-sm transition ${
-                selectedSize === size
-                  ? "border-orange-500 bg-orange-500 font-bold text-black"
-                  : "border-white/10 hover:bg-white/10"
-              }`}
-            >
-              <span className="block">
-                {size}
-              </span>
+      {isPizza ? (
+        <>
+          <div className="mt-5 grid grid-cols-3 gap-2">
+            {(
+              ["Regular", "Medium", "Large"] as PizzaSize[]
+            ).map((size) => {
+              const sizePrice =
+                size === "Regular"
+                  ? regular
+                  : size === "Medium"
+                    ? medium
+                    : large;
 
-              <span className="mt-1 block font-bold">
-                ₹{pizza.prices[size]}
-              </span>
-            </button>
-          )
-        )}
-      </div>
+              return (
+                <button
+                  key={size}
+                  type="button"
+                  disabled={!available}
+                  onClick={() => onSizeChange(size)}
+                  className={`rounded-lg border px-2 py-3 text-center text-sm transition ${
+                    selectedSize === size
+                      ? "border-orange-500 bg-orange-500 font-bold text-black"
+                      : "border-white/10 hover:bg-white/10"
+                  } ${
+                    !available
+                      ? "cursor-not-allowed opacity-50"
+                      : ""
+                  }`}
+                >
+                  <span className="block">
+                    {size}
+                  </span>
 
-      <p className="mt-4 text-sm text-gray-400">
-        Selected:{" "}
-        <span className="font-bold text-white">
-          {selectedSize}
-        </span>
-      </p>
+                  <span className="mt-1 block font-bold">
+                    ₹{sizePrice}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
 
-      <button
-        onClick={onAddToCart}
-        className="mt-5 block w-full rounded-full bg-orange-500 px-5 py-3 text-center font-bold text-black transition hover:bg-orange-400"
-      >
-        Add to Cart
-      </button>
+          <p className="mt-4 text-sm text-gray-400">
+            Selected:{" "}
+            <span className="font-bold text-white">
+              {selectedSize}
+            </span>
+          </p>
+
+          <button
+            type="button"
+            disabled={!available}
+            onClick={() =>
+              onAddToCart(product, selectedSize)
+            }
+            className={`mt-5 block w-full rounded-full px-5 py-3 text-center font-bold transition ${
+              available
+                ? "bg-orange-500 text-black hover:bg-orange-400"
+                : "cursor-not-allowed bg-neutral-800 text-neutral-500"
+            }`}
+          >
+            {available ? "Add to Cart" : "Unavailable"}
+          </button>
+        </>
+      ) : (
+        <>
+          <div className="mt-5">
+            <span className="text-lg font-black text-orange-500">
+              ₹{product.price ?? 0}
+            </span>
+          </div>
+
+          <button
+            type="button"
+            disabled={!available}
+            onClick={() => onAddToCart(product)}
+            className={`mt-5 block w-full rounded-full px-5 py-3 text-center font-bold transition ${
+              available
+                ? "bg-orange-500 text-black hover:bg-orange-400"
+                : "cursor-not-allowed bg-neutral-800 text-neutral-500"
+            }`}
+          >
+            {available ? "Add to Cart" : "Unavailable"}
+          </button>
+        </>
+      )}
     </div>
   );
 }
 
 export default function Home() {
-  const [pizzaSelections, setPizzaSelections] = useState<
-    Record<string, PizzaSize>
-  >({});
+  const supabase = createClient();
+
+  const [products, setProducts] = useState<Product[]>([]);
+  const [productsLoading, setProductsLoading] =
+    useState(true);
+  const [productsError, setProductsError] =
+    useState("");
+
+  const [pizzaSelections, setPizzaSelections] =
+    useState<Record<number, PizzaSize>>({});
 
   const [cart, setCart] = useState<CartItem[]>([]);
   const [cartOpen, setCartOpen] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
+
+  async function loadProducts() {
+    setProductsError("");
+
+    const { data, error } = await supabase
+      .from("products")
+      .select(
+        "id, name, category, description, price, image_url, is_available, is_active, price_regular, price_medium, price_large"
+      )
+      .eq("is_active", true)
+      .order("id", { ascending: true });
+
+    if (error) {
+      console.error(
+        "CUSTOMER SUPABASE ERROR:",
+        error
+      );
+
+      setProductsError(error.message);
+      setProductsLoading(false);
+      return;
+    }
+
+    console.log(
+      "CUSTOMER PRODUCTS FROM SUPABASE:",
+      data
+    );
+
+    setProducts(data ?? []);
+    setProductsLoading(false);
+  }
+
+  useEffect(() => {
+    loadProducts();
+
+    function handleVisibilityChange() {
+      if (document.visibilityState === "visible") {
+        loadProducts();
+      }
+    }
+
+    document.addEventListener(
+      "visibilitychange",
+      handleVisibilityChange
+    );
+
+    return () => {
+      document.removeEventListener(
+        "visibilitychange",
+        handleVisibilityChange
+      );
+    };
+  }, []);
+
+  const groupedProducts = useMemo(() => {
+    const groups: Record<string, Product[]> = {};
+
+    for (const product of products) {
+      const category = getCategoryKey(product.category);
+
+      if (!groups[category]) {
+        groups[category] = [];
+      }
+
+      groups[category].push(product);
+    }
+
+    return groups;
+  }, [products]);
+
+  const orderedCategories = useMemo(() => {
+    const existing = Object.keys(groupedProducts);
+
+    return [
+      ...categoryOrder.filter((category) =>
+        existing.includes(category)
+      ),
+      ...existing.filter(
+        (category) => !categoryOrder.includes(category)
+      ),
+    ];
+  }, [groupedProducts]);
 
   const cartCount = cart.reduce(
     (total, item) => total + item.quantity,
@@ -537,7 +379,8 @@ export default function Home() {
   );
 
   const cartTotal = cart.reduce(
-    (total, item) => total + item.price * item.quantity,
+    (total, item) =>
+      total + item.price * item.quantity,
     0
   );
 
@@ -554,30 +397,54 @@ ${cart
 
 Total: ₹${cartTotal}`;
 
-  function getPizzaSize(name: string): PizzaSize {
-    return pizzaSelections[name] || "Regular";
+  function getPizzaSize(id: number): PizzaSize {
+    return pizzaSelections[id] || "Regular";
   }
 
   function setPizzaSize(
-    name: string,
+    id: number,
     size: PizzaSize
   ) {
     setPizzaSelections((current) => ({
       ...current,
-      [name]: size,
+      [id]: size,
     }));
   }
 
   function addToCart(
-    name: string,
-    price: number,
+    product: Product,
     size?: PizzaSize
   ) {
+    if (product.is_available !== true) {
+      return;
+    }
+
+    const isPizza =
+      getCategoryKey(product.category) === "Pizzas";
+
+    const selectedSize = size || "Regular";
+
+    const price = isPizza
+      ? selectedSize === "Regular"
+        ? product.price_regular ?? product.price ?? 0
+        : selectedSize === "Medium"
+          ? product.price_medium ??
+            product.price_regular ??
+            product.price ??
+            0
+          : product.price_large ??
+            product.price_medium ??
+            product.price_regular ??
+            product.price ??
+            0
+      : product.price ?? 0;
+
     setCart((current) => {
       const existingIndex = current.findIndex(
         (item) =>
-          item.name === name &&
-          item.size === size
+          item.id === product.id &&
+          item.size ===
+            (isPizza ? selectedSize : undefined)
       );
 
       if (existingIndex !== -1) {
@@ -594,8 +461,11 @@ Total: ₹${cartTotal}`;
       return [
         ...current,
         {
-          name,
-          size,
+          id: product.id,
+          name: product.name,
+          size: isPizza
+            ? selectedSize
+            : undefined,
           price,
           quantity: 1,
         },
@@ -630,6 +500,7 @@ Total: ₹${cartTotal}`;
             </a>
 
             <button
+              type="button"
               onClick={() => setCartOpen(true)}
               className="rounded-full border border-white/15 px-5 py-2.5 text-sm font-bold hover:bg-white/10"
             >
@@ -645,20 +516,24 @@ Total: ₹${cartTotal}`;
           </div>
 
           <div className="flex items-center gap-2 sm:hidden">
-  <button
-    onClick={() => setCartOpen(true)}
-    className="rounded-full border border-white/15 px-4 py-2.5 text-sm font-bold hover:bg-white/10"
-  >
-    🛒 Cart ({cartCount})
-  </button>
+            <button
+              type="button"
+              onClick={() => setCartOpen(true)}
+              className="rounded-full border border-white/15 px-4 py-2.5 text-sm font-bold hover:bg-white/10"
+            >
+              🛒 Cart ({cartCount})
+            </button>
 
-  <button
-    onClick={() => setMenuOpen(!menuOpen)}
-    className="rounded-lg border border-white/10 px-3 py-2"
-  >
-    ☰
-  </button>
-</div>
+            <button
+              type="button"
+              onClick={() =>
+                setMenuOpen(!menuOpen)
+              }
+              className="rounded-lg border border-white/10 px-3 py-2"
+            >
+              ☰
+            </button>
+          </div>
         </div>
 
         {menuOpen && (
@@ -673,6 +548,7 @@ Total: ₹${cartTotal}`;
               </a>
 
               <button
+                type="button"
                 onClick={() => {
                   setCartOpen(true);
                   setMenuOpen(false);
@@ -693,7 +569,7 @@ Total: ₹${cartTotal}`;
         )}
       </header>
 
-      {/* Cart Panel */}
+      {/* Cart */}
       {cartOpen && (
         <div className="fixed right-2 top-20 z-[60] w-[calc(100%-1rem)] max-w-sm rounded-2xl border border-white/10 bg-[#151515] p-5 shadow-2xl sm:right-5 sm:top-24 sm:w-80">
           <div className="flex items-center justify-between">
@@ -702,6 +578,7 @@ Total: ₹${cartTotal}`;
             </h2>
 
             <button
+              type="button"
               onClick={() => setCartOpen(false)}
               className="rounded-lg px-3 py-1 text-gray-400 hover:bg-white/10 hover:text-white"
             >
@@ -722,6 +599,7 @@ Total: ₹${cartTotal}`;
               </p>
 
               <button
+                type="button"
                 onClick={() => setCartOpen(false)}
                 className="mt-5 rounded-full bg-orange-500 px-5 py-3 font-bold text-black hover:bg-orange-400"
               >
@@ -733,7 +611,7 @@ Total: ₹${cartTotal}`;
           <div className="mt-5 space-y-3">
             {cart.map((item, index) => (
               <div
-                key={`${item.name}-${item.size ?? "none"}-${index}`}
+                key={`${item.id}-${item.size ?? "none"}-${index}`}
                 className="rounded-xl border border-white/10 bg-white/[0.04] p-4"
               >
                 <div className="flex items-start justify-between gap-3">
@@ -761,17 +639,20 @@ Total: ₹${cartTotal}`;
 
                   <div className="flex items-center gap-2">
                     <button
+                      type="button"
                       onClick={() => {
                         setCart((current) =>
                           current
-                            .map((cartItem, cartIndex) =>
-                              cartIndex === index
-                                ? {
-                                    ...cartItem,
-                                    quantity:
-                                      cartItem.quantity - 1,
-                                  }
-                                : cartItem
+                            .map(
+                              (cartItem, cartIndex) =>
+                                cartIndex === index
+                                  ? {
+                                      ...cartItem,
+                                      quantity:
+                                        cartItem.quantity -
+                                        1,
+                                    }
+                                  : cartItem
                             )
                             .filter(
                               (cartItem) =>
@@ -789,6 +670,7 @@ Total: ₹${cartTotal}`;
                     </span>
 
                     <button
+                      type="button"
                       onClick={() => {
                         setCart((current) =>
                           current.map(
@@ -797,7 +679,8 @@ Total: ₹${cartTotal}`;
                                 ? {
                                     ...cartItem,
                                     quantity:
-                                      cartItem.quantity + 1,
+                                      cartItem.quantity +
+                                      1,
                                   }
                                 : cartItem
                           )
@@ -840,7 +723,7 @@ Total: ₹${cartTotal}`;
         </div>
       )}
 
-      {/* Independence Day Offer */}
+      {/* Offer */}
       <section className="border-b border-orange-500/20 bg-gradient-to-r from-orange-500/10 via-white/[0.03] to-green-500/10">
         <div className="mx-auto max-w-7xl px-5 py-3 text-center">
           <p className="text-xs font-bold uppercase tracking-[0.2em] text-orange-400 sm:text-sm">
@@ -910,213 +793,82 @@ Total: ₹${cartTotal}`;
         </div>
       </section>
 
-      {/* Menu */}
+      {/* Dynamic Menu */}
       <section
         id="menu"
         className="mx-auto max-w-7xl px-5 py-20 sm:px-6"
       >
-        {/* Pizzas */}
-        <div>
-          <SectionTitle
-            number="1"
-            title="PIZZAS"
-            subtitle="Fresh from the oven"
-          />
-
-          <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-            {pizzas.map((pizza) => (
-              <PizzaCard
-                key={pizza.name}
-                pizza={pizza}
-                selectedSize={getPizzaSize(pizza.name)}
-                onSizeChange={(size) =>
-                  setPizzaSize(pizza.name, size)
-                }
-                onAddToCart={() => {
-                  const size = getPizzaSize(pizza.name);
-                  const price = pizza.prices[size];
-
-                  addToCart(
-                    pizza.name,
-                    price,
-                    size
-                  );
-                }}
-              />
-            ))}
+        {productsLoading && (
+          <div className="py-20 text-center">
+            <p className="text-gray-400">
+              Loading menu...
+            </p>
           </div>
-        </div>
+        )}
 
-        {/* Burgers */}
-        <div className="mt-24">
-          <SectionTitle
-            number="2"
-            title="BURGERS"
-            subtitle="Big flavour"
-          />
-
-          <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-            {burgers.map((item) => (
-              <MenuCard
-                key={item.name}
-                item={item}
-                onAddToCart={() =>
-                  addToCart(
-                    item.name,
-                    item.price
-                  )
-                }
-              />
-            ))}
+        {productsError && (
+          <div className="rounded-xl border border-red-500/30 bg-red-500/10 p-5 text-red-300">
+            Unable to load menu: {productsError}
           </div>
-        </div>
+        )}
 
-        {/* Wraps */}
-        <div className="mt-24">
-          <SectionTitle
-            number="3"
-            title="WRAPS"
-            subtitle="Wrapped fresh"
-          />
+        {!productsLoading &&
+          !productsError &&
+          products.length === 0 && (
+            <div className="py-20 text-center">
+              <p className="text-gray-400">
+                No products are currently available.
+              </p>
+            </div>
+          )}
 
-          <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-            {wraps.map((item) => (
-              <MenuCard
-                key={item.name}
-                item={item}
-                onAddToCart={() =>
-                  addToCart(
-                    item.name,
-                    item.price
-                  )
+        {!productsLoading &&
+          !productsError &&
+          orderedCategories.map(
+            (category, categoryIndex) => (
+              <div
+                key={category}
+                className={
+                  categoryIndex === 0
+                    ? ""
+                    : "mt-24"
                 }
-              />
-            ))}
-          </div>
-        </div>
+              >
+                <SectionTitle
+                  number={String(categoryIndex + 1)}
+                  title={category.toUpperCase()}
+                  subtitle={
+                    categorySubtitle[category] ??
+                    "Fresh & delicious"
+                  }
+                />
 
-        {/* Sandwiches */}
-        <div className="mt-24">
-          <SectionTitle
-            number="4"
-            title="SANDWICHES"
-            subtitle="Fresh & loaded"
-          />
-
-          <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-            {sandwiches.map((item) => (
-              <MenuCard
-                key={item.name}
-                item={item}
-                onAddToCart={() =>
-                  addToCart(
-                    item.name,
-                    item.price
-                  )
-                }
-              />
-            ))}
-          </div>
-        </div>
-
-        {/* Combos */}
-        <div className="mt-24">
-          <SectionTitle
-            number="5"
-            title="COMBOS"
-            subtitle="More for less"
-          />
-
-          <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-            {combos.map((item) => (
-              <MenuCard
-                key={item.name}
-                item={item}
-                onAddToCart={() =>
-                  addToCart(
-                    item.name,
-                    item.price
-                  )
-                }
-              />
-            ))}
-          </div>
-        </div>
-
-        {/* Fries */}
-        <div className="mt-24">
-          <SectionTitle
-            number="6"
-            title="FRIES"
-            subtitle="Crispy & loaded"
-          />
-
-          <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
-            {fries.map((item) => (
-              <MenuCard
-                key={item.name}
-                item={item}
-                onAddToCart={() =>
-                  addToCart(
-                    item.name,
-                    item.price
-                  )
-                }
-              />
-            ))}
-          </div>
-        </div>
-
-        {/* Mocktails */}
-        <div className="mt-24">
-          <SectionTitle
-            number="7"
-            title="MOCKTAILS"
-            subtitle="Cool & refreshing"
-          />
-
-          <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-            {mocktails.map((item) => (
-              <MenuCard
-                key={item.name}
-                item={item}
-                onAddToCart={() =>
-                  addToCart(
-                    item.name,
-                    item.price
-                  )
-                }
-              />
-            ))}
-          </div>
-        </div>
-
-        {/* Milkshakes */}
-        <div className="mt-24">
-          <SectionTitle
-            number="8"
-            title="MILKSHAKES"
-            subtitle="Thick & creamy"
-          />
-
-          <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
-            {milkshakes.map((item) => (
-              <MenuCard
-                key={item.name}
-                item={item}
-                onAddToCart={() =>
-                  addToCart(
-                    item.name,
-                    item.price
-                  )
-                }
-              />
-            ))}
-          </div>
-        </div>
+                <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+                  {groupedProducts[category].map(
+                    (product) => (
+                      <ProductCard
+                        key={product.id}
+                        product={product}
+                        selectedSize={getPizzaSize(
+                          product.id
+                        )}
+                        onSizeChange={(size) =>
+                          setPizzaSize(
+                            product.id,
+                            size
+                          )
+                        }
+                        onAddToCart={addToCart}
+                      />
+                    )
+                  )}
+                </div>
+              </div>
+            )
+          )}
       </section>
 
-      {/* Order CTA */}
+      {/* CTA */}
       <section className="border-y border-white/10 bg-white/[0.03]">
         <div className="mx-auto max-w-7xl px-5 py-20 text-center sm:px-6">
           <p className="text-sm font-bold uppercase tracking-[0.35em] text-orange-500">

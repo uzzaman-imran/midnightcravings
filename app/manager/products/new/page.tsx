@@ -1,6 +1,6 @@
 "use client";
 
-import { FormEvent, useState } from "react";
+import { ChangeEvent, FormEvent, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { useRouter } from "next/navigation";
 
@@ -12,7 +12,10 @@ export default function NewProductPage() {
   const [category, setCategory] = useState("");
   const [description, setDescription] = useState("");
   const [price, setPrice] = useState("");
+
   const [imageUrl, setImageUrl] = useState("");
+  const [uploading, setUploading] = useState(false);
+
   const [priceRegular, setPriceRegular] = useState("");
   const [priceMedium, setPriceMedium] = useState("");
   const [priceLarge, setPriceLarge] = useState("");
@@ -22,6 +25,77 @@ export default function NewProductPage() {
 
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+
+  async function handleImageUpload(
+    event: ChangeEvent<HTMLInputElement>
+  ) {
+    const file = event.target.files?.[0];
+
+    if (!file) {
+      return;
+    }
+
+    setError("");
+    setUploading(true);
+
+    try {
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+
+      if (!user) {
+        router.replace("/manager/login");
+        return;
+      }
+
+      if (!file.type.startsWith("image/")) {
+        setError("Please select an image file.");
+        setUploading(false);
+        return;
+      }
+
+      const fileExtension = file.name.split(".").pop()?.toLowerCase();
+
+      if (!fileExtension) {
+        setError("Unable to determine the image file type.");
+        setUploading(false);
+        return;
+      }
+
+      const fileName = `new-${Date.now()}-${Math.random()
+        .toString(36)
+        .slice(2)}.${fileExtension}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from("product-images")
+        .upload(fileName, file, {
+          cacheControl: "3600",
+          upsert: false,
+        });
+
+      if (uploadError) {
+        setError(uploadError.message);
+        setUploading(false);
+        return;
+      }
+
+      const {
+        data: { publicUrl },
+      } = supabase.storage
+        .from("product-images")
+        .getPublicUrl(fileName);
+
+      setImageUrl(publicUrl);
+    } catch (uploadError) {
+      setError(
+        uploadError instanceof Error
+          ? uploadError.message
+          : "Unable to upload image."
+      );
+    }
+
+    setUploading(false);
+  }
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -159,21 +233,47 @@ export default function NewProductPage() {
           </div>
 
           <div>
+            <h3 className="mb-4 text-lg font-semibold">
+              Product Image
+            </h3>
+
+            {imageUrl ? (
+              <div className="mb-4 overflow-hidden rounded-xl border border-white/10 bg-neutral-800">
+                <img
+                  src={imageUrl}
+                  alt={name || "Product preview"}
+                  className="h-64 w-full object-cover"
+                />
+              </div>
+            ) : (
+              <div className="mb-4 flex h-64 items-center justify-center rounded-xl border border-white/10 bg-neutral-800 text-neutral-500">
+                No image selected
+              </div>
+            )}
+
             <label
-              htmlFor="imageUrl"
-              className="mb-2 block text-sm font-medium"
+              htmlFor="productImage"
+              className={`inline-flex cursor-pointer items-center rounded-lg border border-orange-500/40 px-5 py-3 text-sm font-semibold text-orange-400 transition hover:bg-orange-500 hover:text-white ${
+                uploading
+                  ? "cursor-not-allowed opacity-50"
+                  : ""
+              }`}
             >
-              Image URL
+              {uploading ? "Uploading image..." : "Choose Image"}
+
+              <input
+                id="productImage"
+                type="file"
+                accept="image/*"
+                onChange={handleImageUpload}
+                disabled={uploading}
+                className="hidden"
+              />
             </label>
 
-            <input
-              id="imageUrl"
-              type="url"
-              value={imageUrl}
-              onChange={(event) => setImageUrl(event.target.value)}
-              placeholder="https://..."
-              className="w-full rounded-lg border border-white/10 bg-neutral-800 px-4 py-3 text-white outline-none focus:border-orange-400"
-            />
+            <p className="mt-2 text-xs text-neutral-500">
+              Upload a product image from your computer.
+            </p>
           </div>
 
           <div>
@@ -337,7 +437,7 @@ export default function NewProductPage() {
 
             <button
               type="submit"
-              disabled={loading}
+              disabled={loading || uploading}
               className="rounded-lg bg-orange-500 px-5 py-3 font-semibold transition hover:bg-orange-600 disabled:cursor-not-allowed disabled:opacity-50"
             >
               {loading ? "Adding product..." : "Add product"}

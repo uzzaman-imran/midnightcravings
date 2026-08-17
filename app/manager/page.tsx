@@ -38,7 +38,9 @@ export default function ManagerDashboardPage() {
   if (loading) {
     return (
       <main className="min-h-screen bg-neutral-950 text-white flex items-center justify-center">
-        <p className="text-neutral-400">Loading manager dashboard...</p>
+        <p className="text-neutral-400">
+          Loading manager dashboard...
+        </p>
       </main>
     );
   }
@@ -58,6 +60,7 @@ export default function ManagerDashboardPage() {
           </div>
 
           <button
+            type="button"
             onClick={handleSignOut}
             className="rounded-lg border border-white/10 px-4 py-2 text-sm font-medium transition hover:bg-white/10"
           >
@@ -78,7 +81,12 @@ export default function ManagerDashboardPage() {
         </div>
 
         <div className="grid gap-6 md:grid-cols-3">
-          <div className="rounded-2xl border border-white/10 bg-neutral-900 p-6">
+          {/* Manage Products */}
+          <button
+            type="button"
+            onClick={() => router.push("/manager/products")}
+            className="rounded-2xl border border-white/10 bg-neutral-900 p-6 text-left transition hover:border-orange-500/40 hover:bg-neutral-800"
+          >
             <p className="text-sm text-neutral-400">
               Products
             </p>
@@ -90,9 +98,18 @@ export default function ManagerDashboardPage() {
             <p className="mt-2 text-sm text-neutral-500">
               Add, edit, remove and manage your food items.
             </p>
-          </div>
 
-          <div className="rounded-2xl border border-white/10 bg-neutral-900 p-6">
+            <span className="mt-5 inline-block text-sm font-semibold text-orange-400">
+              Open Products →
+            </span>
+          </button>
+
+          {/* Manage Orders */}
+          <button
+            type="button"
+            onClick={() => router.push("/manager/orders")}
+            className="rounded-2xl border border-white/10 bg-neutral-900 p-6 text-left transition hover:border-orange-500/40 hover:bg-neutral-800"
+          >
             <p className="text-sm text-neutral-400">
               Orders
             </p>
@@ -104,8 +121,13 @@ export default function ManagerDashboardPage() {
             <p className="mt-2 text-sm text-neutral-500">
               View and manage customer orders.
             </p>
-          </div>
 
+            <span className="mt-5 inline-block text-sm font-semibold text-orange-400">
+              Open Orders →
+            </span>
+          </button>
+
+          {/* Manager Account */}
           <div className="rounded-2xl border border-white/10 bg-neutral-900 p-6">
             <p className="text-sm text-neutral-400">
               Account
@@ -117,6 +139,10 @@ export default function ManagerDashboardPage() {
 
             <p className="mt-2 text-sm text-neutral-500">
               Currently signed in as your manager account.
+            </p>
+
+            <p className="mt-5 break-all text-sm text-orange-400">
+              {email}
             </p>
           </div>
         </div>

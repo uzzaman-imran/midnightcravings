@@ -158,13 +158,23 @@ export default function ManagerProductsPage() {
       </header>
 
       <section className="mx-auto max-w-7xl px-6 py-10">
-        <div className="mb-8">
-          <h2 className="text-3xl font-bold">Products</h2>
+        <div className="mb-8 flex items-end justify-between gap-4">
+  <div>
+    <h2 className="text-3xl font-bold">Products</h2>
 
-          <p className="mt-2 text-neutral-400">
-            {products.length} products in your menu.
-          </p>
-        </div>
+    <p className="mt-2 text-neutral-400">
+      {products.length} products in your menu.
+    </p>
+  </div>
+
+  <button
+    type="button"
+    onClick={() => router.push("/manager/products/new")}
+    className="rounded-lg bg-orange-500 px-5 py-3 text-sm font-semibold text-black transition hover:bg-orange-400"
+  >
+    + New Product
+  </button>
+</div>
 
         {error && (
           <div className="mb-6 rounded-lg border border-red-500/20 bg-red-500/10 px-4 py-3 text-sm text-red-300">
