@@ -115,11 +115,13 @@ function ProductCard({
   selectedSize,
   onSizeChange,
   onAddToCart,
+  addedProductId,
 }: {
   product: Product;
   selectedSize: PizzaSize;
   onSizeChange: (size: PizzaSize) => void;
   onAddToCart: (product: Product, size?: PizzaSize) => void;
+  addedProductId: number | null;
 }) {
   const isPizza =
     getCategoryKey(product.category) === "Pizzas";
@@ -166,7 +168,7 @@ function ProductCard({
     !available ? "opacity-50 grayscale-[20%]" : ""
   }`}
 />
-        />
+        
       ) : (
         <div
           className={`mb-5 flex h-48 items-center justify-center rounded-xl bg-white/[0.06] text-7xl ${
@@ -243,13 +245,19 @@ function ProductCard({
             onClick={() =>
               onAddToCart(product, selectedSize)
             }
-            className={`mt-5 block w-full rounded-full px-5 py-3 text-center font-bold transition ${
-              available
-                ? "bg-orange-500 text-black hover:bg-orange-400"
-                : "cursor-not-allowed bg-neutral-800 text-neutral-500"
-            }`}
+            className={`mt-5 block w-full rounded-full px-5 py-3 text-center font-bold transition-all duration-200 ${
+  !available
+    ? "cursor-not-allowed bg-neutral-800 text-neutral-500"
+    : addedProductId === product.id
+      ? "scale-[0.98] bg-green-500 text-white"
+      : "bg-orange-500 text-black hover:bg-orange-400 active:scale-95"
+}`}
           >
-            {available ? "Add to Cart" : "Unavailable"}
+            {!available
+  ? "Unavailable"
+  : addedProductId === product.id
+    ? "✓ Added to Cart"
+    : "Add to Cart"}
           </button>
         </>
       ) : (
@@ -264,13 +272,19 @@ function ProductCard({
             type="button"
             disabled={!available}
             onClick={() => onAddToCart(product)}
-            className={`mt-5 block w-full rounded-full px-5 py-3 text-center font-bold transition ${
-              available
-                ? "bg-orange-500 text-black hover:bg-orange-400"
-                : "cursor-not-allowed bg-neutral-800 text-neutral-500"
-            }`}
+            className={`mt-5 block w-full rounded-full px-5 py-3 text-center font-bold transition-all duration-200 ${
+  !available
+    ? "cursor-not-allowed bg-neutral-800 text-neutral-500"
+    : addedProductId === product.id
+      ? "scale-[0.98] bg-green-500 text-white"
+      : "bg-orange-500 text-black hover:bg-orange-400 active:scale-95"
+}`}
           >
-            {available ? "Add to Cart" : "Unavailable"}
+            {!available
+  ? "Unavailable"
+  : addedProductId === product.id
+    ? "✓ Added"
+    : "Add to Cart"}
           </button>
         </>
       )}
@@ -293,6 +307,7 @@ export default function Home() {
   const [cart, setCart] = useState<CartItem[]>([]);
   const [cartOpen, setCartOpen] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
+  const [addedProductId, setAddedProductId] = useState<number | null>(null);
 
   async function loadProducts() {
     setProductsError("");
@@ -415,14 +430,20 @@ Total: ₹${cartTotal}`;
   }
 
   function addToCart(
-    product: Product,
-    size?: PizzaSize
-  ) {
-    if (product.is_available !== true) {
-      return;
-    }
+  product: Product,
+  size?: PizzaSize
+) {
+  if (product.is_available !== true) {
+    return;
+  }
 
-    const isPizza =
+  setAddedProductId(product.id);
+
+  setTimeout(() => {
+    setAddedProductId(null);
+  }, 1000);
+
+  const isPizza = 
       getCategoryKey(product.category) === "Pizzas";
 
     const selectedSize = size || "Regular";
@@ -726,8 +747,8 @@ Total: ₹${cartTotal}`;
         </div>
       )}
 
-      {/* Offer */}
-      <section className="border-b border-orange-500/20 bg-gradient-to-r from-orange-500/10 via-white/[0.03] to-green-500/10">
+      {/* Offer */} {/*
+          <section className="border-b border-orange-500/20 bg-gradient-to-r from-orange-500/10 via-white/[0.03] to-green-500/10">
         <div className="mx-auto max-w-7xl px-5 py-3 text-center">
           <p className="text-xs font-bold uppercase tracking-[0.2em] text-orange-400 sm:text-sm">
             🇮🇳 Independence Day Special
@@ -742,6 +763,7 @@ Total: ₹${cartTotal}`;
           </p>
         </div>
       </section>
+      */}
 
       {/* Hero */}
       <section className="relative overflow-hidden">
@@ -862,6 +884,7 @@ Total: ₹${cartTotal}`;
                           )
                         }
                         onAddToCart={addToCart}
+                        addedProductId={addedProductId}
                       />
                     )
                   )}
