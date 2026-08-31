@@ -371,7 +371,24 @@ export default function Home() {
     useState<Record<number, PizzaSize>>({});
 
   const [cart, setCart] =
-    useState<CartItem[]>([]);
+  useState<CartItem[]>(() => {
+    if (typeof window === "undefined") {
+      return [];
+    }
+
+    try {
+      const savedCart =
+        localStorage.getItem(
+          "midnight-cravings-cart"
+        );
+
+      return savedCart
+        ? JSON.parse(savedCart)
+        : [];
+    } catch {
+      return [];
+    }
+  });
 
   const [cartOpen, setCartOpen] =
     useState(false);
@@ -465,7 +482,20 @@ export default function Home() {
         handleVisibilityChange
       );
     };
-  }, [supabase]);
+  }, [supabase]); 
+  useEffect(() => {
+  try {
+    localStorage.setItem(
+      "midnight-cravings-cart",
+      JSON.stringify(cart)
+    );
+  } catch (error) {
+    console.error(
+      "Unable to save cart:",
+      error
+    );
+  }
+}, [cart]);
 
   const groupedProducts = useMemo(() => {
     const groups: Record<
