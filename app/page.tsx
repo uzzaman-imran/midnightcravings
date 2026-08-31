@@ -158,11 +158,14 @@ function ProductCard({
 
       {product.image_url ? (
         <img
-          src={product.image_url}
-          alt={product.name}
-          className={`mb-5 h-48 w-full rounded-xl object-cover ${
-            !available ? "opacity-50 grayscale-[20%]" : ""
-          }`}
+  src={product.image_url}
+  alt={product.name}
+  loading="lazy"
+  decoding="async"
+  className={`mb-5 h-48 w-full rounded-xl object-cover ${
+    !available ? "opacity-50 grayscale-[20%]" : ""
+  }`}
+/>
         />
       ) : (
         <div
