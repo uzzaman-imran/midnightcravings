@@ -4,6 +4,71 @@ import { ChangeEvent, FormEvent, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { useRouter } from "next/navigation";
 
+async function optimizeImage(file: File): Promise<File> {
+  const image = new Image();
+
+  const objectUrl = URL.createObjectURL(file);
+
+  try {
+    await new Promise<void>((resolve, reject) => {
+      image.onload = () => resolve();
+      image.onerror = () =>
+        reject(new Error("Unable to read the image."));
+      image.src = objectUrl;
+    });
+
+    const maxWidth = 1200;
+    const maxHeight = 1200;
+
+    let width = image.naturalWidth;
+    let height = image.naturalHeight;
+
+    if (width > maxWidth || height > maxHeight) {
+      const scale = Math.min(
+        maxWidth / width,
+        maxHeight / height
+      );
+
+      width = Math.round(width * scale);
+      height = Math.round(height * scale);
+    }
+
+    const canvas = document.createElement("canvas");
+    canvas.width = width;
+    canvas.height = height;
+
+    const context = canvas.getContext("2d");
+
+    if (!context) {
+      throw new Error("Unable to process the image.");
+    }
+
+    context.drawImage(image, 0, 0, width, height);
+
+    const blob = await new Promise<Blob | null>((resolve) =>
+      canvas.toBlob(
+        resolve,
+        "image/webp",
+        0.82
+      )
+    );
+
+    if (!blob) {
+      throw new Error("Unable to optimize the image.");
+    }
+
+    return new File(
+      [blob],
+      `${file.name.replace(/\.[^/.]+$/, "")}.webp`,
+      {
+        type: "image/webp",
+      }
+    );
+  } finally {
+    URL.revokeObjectURL(objectUrl);
+  }
+}
+
 export default function NewProductPage() {
   const router = useRouter();
   const supabase = createClient();
@@ -54,21 +119,15 @@ export default function NewProductPage() {
         return;
       }
 
-      const fileExtension = file.name.split(".").pop()?.toLowerCase();
+const optimizedFile = await optimizeImage(file);
 
-      if (!fileExtension) {
-        setError("Unable to determine the image file type.");
-        setUploading(false);
-        return;
-      }
-
-      const fileName = `new-${Date.now()}-${Math.random()
-        .toString(36)
-        .slice(2)}.${fileExtension}`;
+const fileName = `new-${Date.now()}-${Math.random()
+  .toString(36)
+  .slice(2)}.webp`;
 
       const { error: uploadError } = await supabase.storage
         .from("product-images")
-        .upload(fileName, file, {
+        .upload(fileName, optimizedFile, {
           cacheControl: "3600",
           upsert: false,
         });
